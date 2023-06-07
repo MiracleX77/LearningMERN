@@ -2,6 +2,9 @@ import NavbarComponent from './components/NavbarComponent';
 import axios from "axios";
 import {useState,useEffect} from 'react';
 import Swal from 'sweetalert2';
+import parse from 'html-react-parser'
+import { getUser ,getToken} from './services/authorize';
+
 
 function App() {
   const [blogs,setBlogs] = useState([])
@@ -17,7 +20,7 @@ function App() {
   useEffect(()=>{
     fetchData()
   },[])
-  
+
   const confirmDelete = (slug) =>{
     Swal.fire({
       title:"Delete Confirm ?",
@@ -31,7 +34,11 @@ function App() {
   }
 
   const deleteBlog=(slug)=>{
-    axios.delete(`${process.env.REACT_APP_API}/blog/${slug}`)
+    axios.delete(`${process.env.REACT_APP_API}/blog/${slug}`,{
+      headers:{
+          authorization : `Bearer ${getToken()}`
+      }
+  })
     .then(response=>{
       Swal.fire("Deleted!",response.data.message,"success")
       fetchData()
@@ -50,12 +57,17 @@ function App() {
             <a href={`/blog/${blog.slug}`}> 
             <h2>{blog.title}</h2> 
             </a>
-            <p>{blog.content.substring(0,250)}</p>
+            <div className='pt-3'>{parse(blog.content.substring(0,250))}</div>
             <p className='text-muted'> Author : {blog.author}, Time : {new Date(blog.createdAt).toLocaleString()}</p>
-            <a href={`/blog/edit/${blog.slug}`}>
-            <button className='btn btn-outline-success'> อัพเดดบทความ </button> &nbsp;
-            </a>
-            <button className='btn btn-outline-danger' onClick={()=>confirmDelete(blog.slug)}> ลบบทความ </button>
+            {
+              getUser() &&
+              <div>
+                <a href={`/blog/edit/${blog.slug}`}>
+                  <button className='btn btn-outline-success'> อัพเดดบทความ </button> 
+                </a> &nbsp;
+                <button className='btn btn-outline-danger' onClick={() => confirmDelete(blog.slug)}> ลบบทความ </button>
+              </div> 
+            }
           </div>
         </div>
       ))}

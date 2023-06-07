@@ -4,11 +4,12 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { getUser ,getToken} from '../services/authorize';
 
 const FormComponent=()=>{
     const [state, setState] = useState({
         title:"",
-        author:""
+        author:getUser()
     });
     const {title,author} = state
 
@@ -16,7 +17,6 @@ const FormComponent=()=>{
 
     //กำหนดค่าให้กับ state
     const inputValue = name => event=>{
-        console.log(name,"=",event.target.value)
         setState({...state,[name]:event.target.value})
     }
     const submitContent=(event)=>{
@@ -26,8 +26,11 @@ const FormComponent=()=>{
 
     const submitForm=(e)=>{
         e.preventDefault();
-        console.log("API",process.env.REACT_APP_API)
-        axios.post(`${process.env.REACT_APP_API}/create`,{title,content,author})
+        axios.post(`${process.env.REACT_APP_API}/create`,{title,content,author},{
+            headers:{
+                authorization : `Bearer ${getToken()}`
+            }
+        })
         .then(response=>{
             Swal.fire('Alert!','complete!','success')
             setState({...state,title:"",author:""})
